@@ -39,3 +39,8 @@ def iris(param):
     param = np.array(param).reshape(1,-1)
     predict = knn.predict(param)
     return str(predict)
+
+
+@app.route('/show_image')
+def show_me_image(): # not necessary the same name as app.route
+    return '<img src="/static/setosa.jpg" alt="setosa">'
