@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, abort, redirect, url_for, render_template
 import numpy as np
 from sklearn.externals import joblib
+import os
 
 app = Flask(__name__)
 
@@ -67,8 +68,10 @@ def add_message():
     return jsonify(predict)
 
 from flask_wtf import FlaskForm
-from wtforms import StringField
+from wtforms import StringField, FileField
 from wtforms.validators import DataRequired
+from werkzeug.utils import secure_filename
+
 
 app.config.update(dict(
     SECRET_KEY="powerful secretkey",
@@ -77,11 +80,17 @@ app.config.update(dict(
 
 class MyForm(FlaskForm):
     name = StringField('name', validators=[DataRequired()])
+    file = FileField()
 
 @app.route('/submit', methods=('GET', 'POST'))
 def submit():
     form = MyForm()
     if form.validate_on_submit():
-        print(form.name)
+        
+        f = form.file.data
+        filename = secure_filename(form.name.data + '.txt')
+        f.save(os.path.join(
+            filename
+        ))
         return(str(form.name))
     return render_template('submit.html', form=form)
