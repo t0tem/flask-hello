@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, abort, redirect, url_for, render_temp
 import numpy as np
 from sklearn.externals import joblib
 import os
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -88,9 +89,17 @@ def submit():
     if form.validate_on_submit():
         
         f = form.file.data
-        filename = secure_filename(form.name.data + '.txt')
-        f.save(os.path.join(
-            filename
-        ))
+        filename = secure_filename(form.name.data + '.csv')
+        # f.save(os.path.join(
+        #     filename
+        # ))
+        df = pd.read_csv(f, header=None)
+        print(df.head())
+
+        predict = knn.predict(df)
+
+        result = pd.DataFrame(predict)
+        result.to_csv(filename, index=False, header=False)
+
         return(str(form.name))
     return render_template('submit.html', form=form)
