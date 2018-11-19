@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, abort, redirect, url_for, render_template
+from flask import Flask, request, jsonify, abort, redirect, url_for, render_template, send_file
 import numpy as np
 from sklearn.externals import joblib
 import os
@@ -100,6 +100,51 @@ def submit():
 
         result = pd.DataFrame(predict)
         result.to_csv(filename, index=False, header=False)
+        
+        return send_file(   
+                filename,
+                mimetype="text/csv",
+                attachment_filename=filename,
+                as_attachment=True)
 
-        return(str(form.name))
     return render_template('submit.html', form=form)
+
+import os
+from flask import Flask, flash, request, redirect, url_for
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = ''
+ALLOWED_EXTENSIONS = set(['csv', 'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename + '_uploaded')
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return 'file uploaded'
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+    </form>
+    '''
